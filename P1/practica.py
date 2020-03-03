@@ -93,7 +93,7 @@ def gradient_descent(f, df, x_0, r, max_iter, target_value=-math.inf):
     point = np.copy(x_0)
     x = [[*point]]
     
-    while it < max_iter and f(x_0) > target_value:
+    while it < max_iter and f(point) > target_value:
         point -= r*df(point)
         it += 1
         x.append([*point])
@@ -167,10 +167,10 @@ input()
 
 print("Ejercicio 1.3")
 minima, it, points =gradient_descent(f,
-                                      df,
-                                      np.array([1.0, -1.0]).astype(np.float64),
-                                      0.01,
-                                      50)
+                                     df,
+                                     np.array([1.0, -1.0]).astype(np.float64),
+                                     0.01,
+                                     50)
 
 print('\tResultados utilizando tasa de aprendizaje 0.01') 
 print('\tNumero de iteraciones: {}'.format(it))
@@ -220,7 +220,7 @@ for p in initial_points:
                                    df,
                                    p,
                                    0.01,
-                                   1000)
+                                   50)
   data.append([p[0], p[1], minima[0], minima[1], f(minima)])
 
 table = AsciiTable(data)
