@@ -1,0 +1,238 @@
+#+options: toc:nil
+#+BIND: org-latex-image-default-width 0.5\linewidth
+#+TITLE: Aprendizaje Automático
+#+SUBTITLE: Práctica 1
+#+AUTHOR: Luis Antonio Ortega Andrés
+#+LANGUAGE: es
+#+LATEX_HEADER:\setlength{\parindent}{0in}
+#+LATEX_HEADER: \usepackage[margin=0.8in]{geometry}
+#+LATEX_HEADER: \usepackage[spanish]{babel}
+#+LATEX_HEADER: \usepackage{mathtools}
+#+latex_class_options: [11pt]
+#+LaTeX_HEADER: \usepackage[left=1in,top=1in,right=1in,bottom=1.5in]{geometry}
+#+LaTeX_HEADER: \usepackage{palatino}
+#+LaTeX_HEADER: \usepackage{fancyhdr}
+#+LaTeX_HEADER: \usepackage{sectsty}
+#+LaTeX_HEADER: \usepackage{engord}
+#+LaTeX_HEADER: \usepackage{cite}
+#+LaTeX_HEADER: \usepackage{graphicx}
+#+LaTeX_HEADER: \usepackage{setspace}
+#+LaTeX_HEADER: \usepackage[compact]{titlesec}
+#+LaTeX_HEADER: \usepackage[center]{caption}
+#+LaTeX_HEADER: \usepackage{placeins}
+#+LaTeX_HEADER: \usepackage{color}
+
+#+LaTeX_HEADER: \usepackage{amsmath}
+#+LaTeX_HEADER: \usepackage{minted}
+#+LaTeX_HEADER: \usepackage{pdfpages}
+
+
+* Ejercicio 1
+** Consideraciones previas
+
+Para construir las funciones de este apartado las definiremos como funciones de
+~Python~, además, utilizaremos la macro ~@to_numpy~ definida de la siguiente forma
+
+#+BEGIN_SRC python
+def to_numpy(func):
+  def numpy_func(w):
+    return func(*w)
+  return numpy_func
+#+END_SRC
+
+Esto nos permitirá definir las funciones con dos variables de forma más comoda y
+luego poder utilizarlas sobre arrays de ~Numpy~ con un único argumento. Por
+ejemplo, supongamos que tenemos definida una función ~f~ de la siguiente forma
+
+#+BEGIN_SRC python
+@to_numpy
+def f(x,y):
+    return x+y
+#+END_SRC
+
+Podriamos utilizarla de la siguiente forma con un solo argumento.
+
+#+BEGIN_SRC python
+a = np.array([1.0, 1.0])
+f(a)
+#+END_SRC
+
+Esto lo podríamos hacer con un array normal utilizando el operador ~*~ para
+desenrrollarlo, sin embargo, como se nos pide utilizar flotantes de 64 bits,
+requerimos de ~numpy~, luego inicializaremos nuestros puntos iniciales como
+
+#+BEGIN_SRC python
+a = np.array([1.0, 1.0]).astype(np.float64)
+#+END_SRC
+
+** Apartado 1
+
+En el primer punto de este ejercicio se nos pide implementar el algoritmo de
+gradiente descendente, para ello, declaramos la siguiente función en python.
+
+#+BEGIN_SRC python
+def gradient_descent(f, df, x_0, r, max_iter, target_value = -math.inf):
+#+END_SRC
+
+Veamos el funcionamiento de la misma. Primero, tenemos los siguientes argumentos
+posicionales:
+- ~x_0~~: Punto inicial
+- ~f~~: Función a minimizar. Debe ser diferenciable
+- ~df~: Gradiente de ~f~
+- ~r~: Tasa de aprendizaje
+- ~max_iter~: Máximo número de iteraciones a realizar
+Además tenemos el siguiente argumento opcional:
+- ~target_value~: Criterio de parada, una vez alcanzado dicho valor termina la ejecución.
+Si no se especifica se ignora este criterio de parada.
+
+Inicializamos las siguientes variables
+#+BEGIN_SRC python
+it = 0
+point = np.copy(x_0)
+x = [[*point]]
+#+END_SRC
+Vemos que hacemos una copia del punto ~x_0~, esto es porque no queremos cambiar
+el valor de ~x_0~.
+
+Inicializamos el vector de puntos con el valor inicial que tenemos.
+
+Comenzamos entonces con el bucle principal de nuestra función, donde utilizamos
+los dos criterios de parada que tenemos.
+#+BEGIN_SRC python
+while it < max_iter and f(point) > target_value:
+    point -= r*df(point)
+    it += 1
+    x.append([*point])
+#+END_SRC
+
+en cada iteración ajustamos el valor del nuevo punto en función del gradiente y
+de la tasa de aprendizaje, aumentamos el número de iteraciones y almacenamos el
+nuevo punto.
+
+Nuestra función devuelve:
+- Mínimo hallado
+- Número de iteraciones que se han necesitado
+- Array de secuencia de puntos obtenidos (se utilizará para pintar gráficas más tarde)
+#+BEGIN_SRC python
+return point, it, x
+#+END_SRC
+
+** Apartado 2
+
+Se nos pide ahora considerar la función
+$$
+E(u,v) = (ue^v - 2ve^{-u})^2
+$$
+y el punto inicial $x_0 = (1,1)$ con una tasa de aprendizaje de $0.1$.
+
+Calculamos ambas derivadas parciales de la función $E$, para ello utilizamos las
+reglas de derivación clásicas.
+$$
+\frac{\partial E}{\partial u} = 2(ue^v - 2ve^{-u})(e^v + 2ve^{-u})
+$$
+
+$$
+\frac{\partial E}{\partial v} = 2(ue^v - 2ve^{-u})(ue^v - 2e^{-u})
+$$
+Luego tenemos que el gradiente $\nabla E$ es
+$$
+\nabla E = (\frac{\partial E}{\partial u}, \frac{\partial E}{\partial v}) = (
+2(ue^v - 2ve^{-u})(e^v + 2ve^{-u}),  2(ue^v - 2ve^{-u})(ue^v - 2e^{-u}))
+$$
+
+Ejecutamos entonces nuestro algoritmo,
+
+
+#+BEGIN_SRC python
+minima, it, _ = gradient_descent(E,
+                                 dE,
+                                 np.array([1.0, 1.0]).astype(np.float64),
+                                 0.1,
+                                 1000,
+                                 1e-14)
+#+END_SRC
+
+Podemos ver en la salida el número de
+iteraciones que hemos necesitado, el valor obtenido y el punto en que que se alcanza.
+#+BEGIN_SRC bash
+	Numero de iteraciones necesarias: 10
+	Punto obtenido: [0.04473629 0.02395871]
+	Valor de la función en el punto: 1.2086833944220747e-15
+#+END_SRC
+
+** Apartado 3
+
+En este apartado consideramos una nueva función
+$$
+f(x,y) = (x-2)^2 + 2(y+2)^2 +2sin(2\pi x)sin(2\pi y)
+$$
+
+Nos ahorramos los cálculos en este caso, el gradiente de la funcón es
+
+$$
+\nabla f (x,y) =  (2(2\pi cos(2\pi x) sin(2\pi y) + x - 2), 4(\pi sin(2 \pi
+x)cos(2\pi y)+y+2))
+$$
+
+Se nos pide realizar dos primeras ejecuciones del algoritmo en este apartado,
+veamos los resultados de la primera de ella
++ Valor inicial $(1, -1)$
++ Tasa de aprendizaje $0.01$
++ Máximo de iteraciones $50$
+
+  #+BEGIN_SRC python
+minima, it, points =gradient_descent(f,
+                                     df,
+                                     np.array([1.0, -1.0]).astype(np.float64),
+                                     0.01,
+                                     50)
+  #+END_SRC
+
+Utilizamos la funcion ~display_figure~ para ver los resultados obtenidos.
+
+#+CAPTION: Evolución de la búsqueda de mínimo a lo largo de las iteraciones $\eta = 0.01$
+#+ATTR_LaTeX: :placement [H]
+[[./images/it1.png]]
+
+#+CAPTION: Puntos obtenidos vistos sobre la superficie de la función
+#+ATTR_LaTeX: :placement [H]
+[[./images/surf1.png]]
+
+
+Veamos ahora que gráficas obtenemos utilizando una tasa de aprendizaje de
+$0.01$.
+
+#+CAPTION: Evolución de la búsqueda de mínimo a lo largo de las iteraciones $\eta = 0.1$
+#+ATTR_LaTeX: :placement [H]
+[[./images/it2.png]]
+
+#+CAPTION: Puntos obtenidos vistos sobre la superficie de la función
+#+ATTR_LaTeX: :placement [H]
+[[./images/surf2.png]]
+
+Como podemos observar en las gŕaficas, tomar un valor de $\eta = 0.01$ es
+suficiente para converger rápidamente al óptimo local, sin embargo, al aumentar
+dicho valor a $0.1$, hacemos que el desplazamiento por la superficie de la
+función sea demasiado brusco, saltando entre minimos locales como podemos ver en
+la imagen sobre la superficie.
+
+Veamos ahora que resultados hemos obtenido utilizando los distintos valores
+iniciales, notamos que se ha dejado el número de iteraciones a $50$, ya que no
+parece importar significativamente.
+
+
+
+| *x inicial* | *y inicial* | *x final*          | *y final*           | *valor mínimo*       |
+|-------------+-------------+--------------------+---------------------+----------------------+
+| <l>         | <l>         | <l>                | <l>                 | <l>                  |
+| 2.1         | -2.1        | 2.2438049693647883 | -2.2379258214861775 | -1.820078541547156   |
+| 3.0         | -3.0        | 2.7309356482481055 | -2.7132791261667037 | -0.38124949743809955 |
+| 1.5         | -1.5        | 1.7561950306352119 | -1.7620741785138225 | -1.8200785415471565  |
+| 1.0         | -1.0        | 1.269064351751895  | -1.2867208738332965 | -0.3812494974381     |
+
+** TODO Pone obtener el mínimo (comprobar que lo es).
+
+
+** TODO Conclusión sobre la verdadera dificultad de encontrar el mínimo global de una función arbitraria
+
+* Ejercicio 2

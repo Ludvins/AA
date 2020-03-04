@@ -33,8 +33,21 @@ Argumentos:
 - points: Array de coordenadas x,y de los puntos.
 """
 def display_figure(f, points):
-  
-  # Obtención de coordenadas de los puntos
+
+  fig = plt.figure(figsize=plt.figaspect(2.))
+  fig.suptitle('Evolución de los puntos en iteracoines y sobre superficie')
+
+  # First subplot
+  ax = fig.add_subplot(2, 2, 1)
+
+  ax.plot([f(a) for a in points], linestyle='--', marker='o', color='b')
+  ax.grid(True)
+  ax.set_ylabel('f(x,y)')
+
+  # Second subplot
+  ax = fig.add_subplot(2, 2, 2, projection='3d')
+
+    # Obtención de coordenadas de los puntos
   px = [a[0] for a in points] 
   py = [a[1] for a in points]
 
@@ -53,20 +66,19 @@ def display_figure(f, points):
   X, Y = np.meshgrid(x, y)
   Z = f([X, Y])
   
-  fig = plt.figure()
-  ax = plt.axes(projection='3d')
-
   # Pintamos la superficia de la función
-  ax.plot_wireframe(X, Y, Z)
+  ax.plot_surface(X, Y, Z, alpha = 0.5)
 
   # Pintamos los puntos
-  ax.scatter3D(px, py, pz, c='r');
+  ax.scatter3D(px, py, pz, c='r',depthshade=False);
   ax.set_xlabel('x')
   ax.set_ylabel('y')
   ax.set_zlabel('f(x,y)')
 
-  plt.show()
   
+  plt.show()
+
+
 #######################################################################
 ######################## GRADIENTE DESCENDENTE ########################
 #######################################################################
@@ -206,7 +218,7 @@ data = [
 Valores iniciales de las ejecuciones
 """
 initial_points = [
-  np.array([2.1, -2-1]).astype(np.float64),
+  np.array([2.1, -2.1]).astype(np.float64),
   np.array([3, -3]).astype(np.float64),
   np.array([1.5, -1.5]).astype(np.float64),
   np.array([1.0, -1.0]).astype(np.float64)
