@@ -178,7 +178,7 @@ input()
 #######################################################################
 
 print("Ejercicio 1.3")
-minima, it, points =gradient_descent(f,
+minima, it, points = gradient_descent(f,
                                      df,
                                      np.array([1.0, -1.0]).astype(np.float64),
                                      0.01,
@@ -220,7 +220,7 @@ Valores iniciales de las ejecuciones
 initial_points = [
   np.array([2.1, -2.1]).astype(np.float64),
   np.array([3, -3]).astype(np.float64),
-  np.array([1.5, -1.5]).astype(np.float64),
+  np.array([1.5, 1.5]).astype(np.float64),
   np.array([1.0, -1.0]).astype(np.float64)
 ]
 
