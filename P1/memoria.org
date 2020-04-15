@@ -25,11 +25,12 @@
 #+LaTeX_HEADER: \usepackage{amsmath}
 #+LaTeX_HEADER: \usepackage{minted}
 #+LaTeX_HEADER: \usepackage{pdfpages}
+#+latex_header: \titlespacing*{\subsection}{0pt}{5.5ex plus 1ex minus .2ex}{4.3ex plus .2ex}
 
 * Ejercicio 1
 ** Consideraciones previas
 
-Para construir las funciones de este apartado las definiremos como funciones de
+Las funciones que vamos a estudiar las definiremos como funciones de
 ~Python~, además, utilizaremos la macro ~@to_numpy~ definida de la siguiente forma
 
 #+BEGIN_SRC python
@@ -39,7 +40,7 @@ def to_numpy(func):
   return numpy_func
 #+END_SRC
 
-Esto nos permitirá definir las funciones con dos variables de forma más comoda y
+Esto nos permitirá definir las funciones con dos variables de forma más cómoda y
 luego poder utilizarlas sobre arrays de ~Numpy~ con un único argumento. Por
 ejemplo, supongamos que tenemos definida una función ~f~ de la siguiente forma
 
@@ -49,25 +50,32 @@ def f(x,y):
     return x+y
 #+END_SRC
 
-Podriamos utilizarla de la siguiente forma con un solo argumento.
+Podríamos utilizarla de la siguiente forma con un solo argumento.
 
 #+BEGIN_SRC python
 a = np.array([1.0, 1.0])
 f(a)
 #+END_SRC
 
-Esto lo podríamos hacer con un array normal utilizando el operador ~*~ para
-desenrrollarlo, sin embargo, como se nos pide utilizar flotantes de 64 bits,
-requerimos de ~numpy~, luego inicializaremos nuestros puntos iniciales como
-
+También utilizaremos flotantes de 64 bits en los arrays de ~numpy~, aunque no
+aparecerá especificado en el resto de la memoria.
 #+BEGIN_SRC python
 a = np.array([1.0, 1.0]).astype(np.float64)
 #+END_SRC
 
+
+También se ha programado una función ~display_figure~ que, dados una función y un
+conjunto de puntos sobre los que evaluarla, dibujará dos gráficos:
+ - Un gráfico 2D donde se puede ver la evolución de ~f~ sobre los puntos dados.
+ - Un gráfico 3D donde pintamos la superficie generada por ~f~ y la sucesión de
+   puntos obtenidos sobre ella.
+
+Utilizaremos esta función para mostrar los resultados obtenidos.
+
 ** Apartado 1
 
 En el primer punto de este ejercicio se nos pide implementar el algoritmo de
-gradiente descendente, para ello, declaramos la siguiente función en python.
+gradiente descendente, para ello, declaramos la siguiente función.
 
 #+BEGIN_SRC python
 def gradient_descent(f, df, x_0, r, max_iter, target_value = -math.inf):
@@ -75,28 +83,26 @@ def gradient_descent(f, df, x_0, r, max_iter, target_value = -math.inf):
 
 Veamos el funcionamiento de la misma. Primero, tenemos los siguientes argumentos
 posicionales:
-- ~x_0~~: Punto inicial
-- ~f~~: Función a minimizar. Debe ser diferenciable
-- ~df~: Gradiente de ~f~
-- ~r~: Tasa de aprendizaje
-- ~max_iter~: Máximo número de iteraciones a realizar
+- ~x_0~: Punto inicial.
+- ~f~: Función a minimizar.
+- ~df~: Gradiente de ~f~.
+- ~r~: Tasa de aprendizaje.
+- ~max_iter~: Máximo número de iteraciones a realizar.
 Además tenemos el siguiente argumento opcional:
-- ~target_value~: Criterio de parada, una vez alcanzado dicho valor termina la ejecución.
-Si no se especifica se ignora este criterio de parada.
+- ~target_value~: Segundo criterio de parada, una vez alcanzado dicho valor termina la
+  ejecución.
 
-Inicializamos las siguientes variables
-#+BEGIN_SRC python
-it = 0
-point = np.copy(x_0)
-x = [[*point]]
-#+END_SRC
-Vemos que hacemos una copia del punto ~x_0~, esto es porque no queremos cambiar
-el valor de ~x_0~.
+Nuestra función devuelve:
+- Mínimo hallado (~point~).
+- Número de iteraciones que se han necesitado (~it~).
+- Array de secuencia de puntos obtenidos (se utilizará para pintar gráficas más
+  tarde) (~x~).
 
-Inicializamos el vector de puntos con el valor inicial que tenemos.
+El algoritmo consiste en un único bucle con ambos criterios de parada, en cada
+iteración actualizaremos el punto actual en dirección opuesta a la que indica el
+gradiente, además de
+actualizar el contador y añadir el punto al vector ~x~.
 
-Comenzamos entonces con el bucle principal de nuestra función, donde utilizamos
-los dos criterios de parada que tenemos.
 #+BEGIN_SRC python
 while it < max_iter and f(point) > target_value:
     point -= r*df(point)
@@ -104,25 +110,21 @@ while it < max_iter and f(point) > target_value:
     x.append([*point])
 #+END_SRC
 
-en cada iteración ajustamos el valor del nuevo punto en función del gradiente y
-de la tasa de aprendizaje, aumentamos el número de iteraciones y almacenamos el
-nuevo punto.
+Finalmente devolvemos lo que buscamos.
 
-Nuestra función devuelve:
-- Mínimo hallado
-- Número de iteraciones que se han necesitado
-- Array de secuencia de puntos obtenidos (se utilizará para pintar gráficas más tarde)
 #+BEGIN_SRC python
 return point, it, x
 #+END_SRC
-
+\newpage
 ** Apartado 2
 
 Se nos pide ahora considerar la función
 $$
 E(u,v) = (ue^v - 2ve^{-u})^2
 $$
-y el punto inicial $x_0 = (1,1)$ con una tasa de aprendizaje de $0.1$.
+y el punto inicial $x_0 = (1,1)$ con una tasa de aprendizaje de $0.1$. Debemos
+calcular el número de iteraciones necesarias hasta alcanzar un error inferior a
+$10^{-14}$, junto con las coordenadas de dicho punto.\\
 
 Calculamos ambas derivadas parciales de la función $E$, para ello utilizamos las
 reglas de derivación clásicas.
@@ -135,24 +137,24 @@ $$
 $$
 Luego tenemos que el gradiente $\nabla E$ es
 $$
-\nabla E = (\frac{\partial E}{\partial u}, \frac{\partial E}{\partial v}) = (
-2(ue^v - 2ve^{-u})(e^v + 2ve^{-u}),  2(ue^v - 2ve^{-u})(ue^v - 2e^{-u}))
+\nabla E = \Bigg(\frac{\partial E}{\partial u}, \frac{\partial E}{\partial v}\Bigg) = \Big(
+2(ue^v - 2ve^{-u})(e^v + 2ve^{-u}), \  2(ue^v - 2ve^{-u})(ue^v - 2e^{-u})\Big)
 $$
 
 Ejecutamos entonces nuestro algoritmo,
 
 
 #+BEGIN_SRC python
-minima, it, _ = gradient_descent(E,
-                                 dE,
-                                 np.array([1.0, 1.0]).astype(np.float64),
-                                 0.1,
-                                 1000,
-                                 1e-14)
+min, it, _ = gradient_descent(E,
+                              dE,
+                              np.array([1.0, 1.0])
+                              0.1,
+                              1000,
+                              1e-14)
 #+END_SRC
 
 Podemos ver en la salida el número de
-iteraciones que hemos necesitado, el valor obtenido y el punto en que que se alcanza.
+iteraciones que hemos necesitado (10), el valor obtenido y el punto en que que se alcanza.
 #+BEGIN_SRC bash
 	Numero de iteraciones necesarias: 10
 	Punto obtenido: [0.04473629 0.02395871]
@@ -166,25 +168,25 @@ $$
 f(x,y) = (x-2)^2 + 2(y+2)^2 +2sin(2\pi x)sin(2\pi y)
 $$
 
-Nos ahorramos los cálculos en este caso, el gradiente de la funcón es
+Nos ahorramos los cálculos en este caso, el gradiente de la función es
 
 $$
-\nabla f (x,y) =  (2(2\pi cos(2\pi x) sin(2\pi y) + x - 2), 4(\pi sin(2 \pi
-x)cos(2\pi y)+y+2))
+\nabla f (x,y) =  \Big(2(2\pi cos(2\pi x) sin(2\pi y) + x - 2), \ 4(\pi sin(2 \pi
+x)cos(2\pi y)+y+2)\Big)
 $$
 
 Se nos pide realizar dos primeras ejecuciones del algoritmo en este apartado,
-veamos los resultados de la primera de ella
-+ Valor inicial $(1, -1)$
-+ Tasa de aprendizaje $0.01$
-+ Máximo de iteraciones $50$
+veamos los resultados de la primera de ella, los parámetros son:
++ Valor inicial: $(1, -1)$
++ Tasa de aprendizaje: $0.01$
++ Máximo de iteraciones: $50$
 
   #+BEGIN_SRC python
-minima, it, points =gradient_descent(f,
-                                     df,
-                                     np.array([1.0, -1.0]).astype(np.float64),
-                                     0.01,
-                                     50)
+minima, it, points = gradient_descent(f,
+                                      df,
+                                      np.array([1.0, -1.0])
+                                      0.01,
+                                      50)
   #+END_SRC
 
 Utilizamos la funcion ~display_figure~ para ver los resultados obtenidos.
@@ -193,45 +195,440 @@ Utilizamos la funcion ~display_figure~ para ver los resultados obtenidos.
 #+ATTR_LaTeX: :placement [H]
 [[./images/it1.png]]
 
-#+CAPTION: Puntos obtenidos vistos sobre la superficie de la función
-#+ATTR_LaTeX: :placement [H]
-[[./images/surf1.png]]
 
-
-Veamos ahora que gráficas obtenemos utilizando una tasa de aprendizaje de
-$0.01$.
+Se nos pide ahora realizar el mismo experimento utilizando una tasa de aprendizaje de
+$0.01$. Los resultados son los siguientes.
 
 #+CAPTION: Evolución de la búsqueda de mínimo a lo largo de las iteraciones $\eta = 0.1$
 #+ATTR_LaTeX: :placement [H]
 [[./images/it2.png]]
 
-#+CAPTION: Puntos obtenidos vistos sobre la superficie de la función
-#+ATTR_LaTeX: :placement [H]
-[[./images/surf2.png]]
-
-Como podemos observar en las gŕaficas, tomar un valor de $\eta = 0.01$ es
+Como podemos observar en las gráficas, tomar un valor de $\eta = 0.01$ es
 suficiente para converger rápidamente al óptimo local, sin embargo, al aumentar
 dicho valor a $0.1$, hacemos que el desplazamiento por la superficie de la
-función sea demasiado brusco, saltando entre minimos locales como podemos ver en
-la imagen sobre la superficie.
+función sea demasiado brusco, saltando entre entornos de mínimos locales como podemos ver en
+la imagen sobre la superficie.\\
+
+La tasa de aprendizaje afecta de forma esencial a la convergencia del algoritmo,
+siendo que, si tomamos valores demasiado elevados, el algoritmo no consigue
+converger si no que oscila e incluso se sale del entorno del mínimo buscado.
+Podemos entonces concluir que la elección de una tasa de aprendizaje correcta para el algoritmo del
+gradiente descendente es vital.\\
 
 Veamos ahora que resultados hemos obtenido utilizando los distintos valores
-iniciales, notamos que se ha dejado el número de iteraciones a $50$, ya que no
-parece importar significativamente.
+iniciales, notamos que se ha dejado el número de iteraciones a $50$, ya que son
+suficientes para alcanzar el mínimo (comprobado por experimentación).
 
 
+| $x_1$ | $y_1$ |     $x_{50}$      |      $y_{50}$      |   Valor mínimo   |
+|-------+-------+-------------------+--------------------+------------------|
+|  <c>  |  <c>  |        <c>        |        <c>         |       <c>        |
+|  2.1  | -2.1  | 2.243804969364788 | -2.237925821486177 | -1.8200785415471 |
+|  3.0  | -3.0  | 2.730935648248105 | -2.713279126166703 | -0.3812494974380 |
+|  1.0  | -1.0  | 1.269064351751895 | -1.286720873833296 | -0.3812494974381 |
+|  1.5  |  1.5  | 1.777924474489115 | 1.0320568726696969 | 18.0420780099576 |
 
-| *x inicial* | *y inicial* | *x final*          | *y final*           | *valor mínimo*       |
-|-------------+-------------+--------------------+---------------------+----------------------|
-| <l>         | <l>         | <l>                | <l>                 | <l>                  |
-| 2.1         | -2.1        | 2.2438049693647883 | -2.2379258214861775 | -1.820078541547156   |
-| 3.0         | -3.0        | 2.7309356482481055 | -2.7132791261667037 | -0.38124949743809955 |
-| 1.0         | -1.0        | 1.269064351751895  | -1.2867208738332965 | -0.3812494974381     |
-| 1.5         | 1.5         | 1.7779244744891156 | 1.032056872669696   | 18.042078009957635   |
+Como podemos ver en la tabla, la elección de un buen punto inicial para el
+algoritmo es otro parámetro vital, ya que intervendrá de forma directa en el
+mínimo al que nos aproximamos.
 
-** TODO Pone obtener el mínimo (comprobar que lo es).
+** ¿Cuál sería su conclusión sobre la verdadera dificultad de encontrar el mínimo global de una función arbitraria?
 
 
-** TODO Conclusión sobre la verdadera dificultad de encontrar el mínimo global de una función arbitraria
+El algoritmo del gradiente descendente estocástico es un método aplicable a
+cualquier función diferenciable y para el que, bajo ciertas condiciones como
+convexidad, se puede asegurar la obtención de un mínimo global. En la práctica
+estas condiciones no tienen porque cumplirse como es el caso de nuestras
+funciones ~E~ y ~f~, además los resultados obtenidos en estas son muy distintos.\\
 
+En la función ~E~ hemos visto como alcanzamos un mínimo en pocas iteraciones con
+una tasa de aprendizaje de ~0.1~, cosa que en la función ~f~ no ha sido
+suficiente, y ha sido necesario relajar este valor.\\
+
+Esto se debe a que como
+podemos ver en la última gráfica, la función ~f~ tiene una gran cantidad de
+mínimos locales muy cercanos, lo cual dificulta la tarea del algoritmo si no escogemos los
+parámetros correctamente.\\
+
+Podemos decir entonces que la verdadera dificultad al encontrar un mínimo local
+reside en la elección de parámetros, a saber:
+
++ La tasa de aprendizaje. Como hemos visto este parámetro juega un papel
+  fundamental en la convergencia del algoritmo, hemos visto como una mala
+  elección del mismo puede provocar resultados indeseados. Una alternativa a
+  posibles problemas con la elección de este parámetro es utilizar una tasa de
+  aprendizaje /dinámica/, de forma que se ajuste conforme se producen
+  iteraciones del algoritmo.
+ 
++ El punto inicial. La tabla del apartado anterior nos permite mostrar como, la
+  elección del punto inicial del algoritmo marca significativamente su
+  resultado, ya que determina que mínimo local va a buscar.
+
+\newpage
 * Ejercicio 2
+** Consideraciones previas
+
+En este ejercicio, además de reutilizar la macro ~@to_numpy~, se ha utilizado una función ~scatter~ para dibujar aquellos
+gráficos que se piden a lo largo del mismo, esta función pinta un gráfico 2D
+donde podemos representar los siguientes elementos.
+- Solo puntos.
+- Puntos etiquetados.
+- Modelos de regresión lineales.
+- Modelos de regresión no lineales (6 características, concretamente las que
+  tratamos más adelante).
+
+Su código se encuentra en el archivo del ejercicio correspondiente.
+
+** Apartado 1
+
+En este apartado se nos pide estimar un modelo de regresión lineal a partir de
+los datos que se nos proporcionan. Para ello debemos programar el algoritmo del
+Gradiente Descendente Estocástico (SGD) y el de la pseudoinversa.\\
+
+Primero definimos la función de error del modelo de regresión lineal. Utilizamos la función ~np.linalg.norm~ para
+calcular la norma del vector.
+
+#+BEGIN_SRC python
+def Err(x, y , w):
+    return (np.linalg.norm(x.dot(w) - y)**2)/len(x)
+#+END_SRC
+
+Consideramos también su derivada.
+
+#+BEGIN_SRC python
+def dErr(x, y, w):
+    return 2*(x.T.dot(x.dot(w) - y))/len(x)
+#+END_SRC
+
+Comenzamos viendo el algoritmo SGD, para ello definimos la función con los
+siguientes argumentos:
+- ~x~: Datos en coordenadas homogéneas.
+- ~y~: Etiquetas asociadas (-1 o 1).
+- ~r~: Tasa de aprendizaje. Por defecto 0.01.
+- ~max_iteraciones~: Número máximo de iteraciones a realizar. Por defecto 500.
+- ~batch_size~: Tamaño del batch a utilizar. Por defecto 32.
+- ~verbose~: Activa el muestreo de Ein por iteración. Por defecto desactivado.
+
+#+BEGIN_SRC python
+def sgd(x, y, r = 0.01, max_iterations = 500, batch_size = 32,verbose = 0):
+#+END_SRC
+
+Utilizaremos dos variables para llevar la cuenta de aquellos índices que  aún no
+hemos utilizado.
+- ~indexes~: Será una permutación del conjunto de índices que iremos recorriendo
+  por bloques de tamaño ~batch_size~.
+- ~offset~: Mostrará la posición donde debe comenzar el próximo bloque.
+
+#+BEGIN_SRC python
+indexes = np.random.permutation(np.arange(len(x)))
+offset = 0
+#+END_SRC
+
+Para cada iteración, tomamos los índices que vamos a utilizar
+
+#+BEGIN_SRC python
+for i in range(max_iterations) :
+    ids = indexes[offset : offset + batch_size]
+#+END_SRC
+
+actualizamos el vector de pesos y el ~offset~
+
+#+BEGIN_SRC python
+    w = w - r*dErr(x[ids, :], y[ids], w)
+    offset += batch_size
+
+    if offset > len(x):
+        offset = 0
+        indexes = np.random.permutation(np.arange(len(x)))
+#+END_SRC
+
+Veamos que resultados obtenemos sobre nuestros datos, utilizando los valores de
+los parámetros por defecto. Mostraremos una gráfica
+comparándolos con los obtenidos con el algoritmo de la pseudoinversa.
+
+#+BEGIN_SRC sh
+Bondad del resultado para gradiente descendente estocástico:
+	Ein:   0.08183580088111438
+	Eout:  0.1348267637223906
+
+#+END_SRC
+
+Veamos ahora el algoritmo de la pseudoinversa. Para ello tomamos dos argumentos
+- ~x~: Datos en coordenadas homogéneas
+- ~y~: Etiquetas asociadas.
+
+Seguimos los siguientes pasos:
+- Construimos la descomposición ~u, s, v = svd(x)~, al estar utilizando métodos
+  números sujetos a errores de redondeos, utilizamos la función ~np.allclose()~
+  para detectar estos errores cercanos al 0 y sustituirlos por el mismo.
+- Creamos la pseudoinversa de ~s~, para ello creamos una matriz diagonal con los
+  inversos de los valores de ~s~.
+- Calculamos entonces $(x^T x)^{-1}x^T y = (v^Ts^Tu^T usv)^{-1}x^T y =
+  (v^Tssv)^{-1}x^Ty = v^Ts^{-1}s^{-1}vx^Ty$, donde utilizamos que $u^Tu = v^Tv=
+  Id$, que $s$ es diagonal y que $(ab)^T = b^Ta^T$, $(ab)^{-1} = b^{-1}a^{-1}$.
+
+#+BEGIN_SRC python
+def pseudoinverse(x, y):
+  u, s, v = np.linalg.svd(x)
+  d = np.diag([0 if np.allclose(p, 0) else 1/p for p in s])
+  return v.T.dot(d).dot(d).dot(v).dot(x.T).dot(y)
+#+END_SRC
+
+Los datos que obtenemos son los siguientes:
+
+#+BEGIN_SRC sh
+Bondad del resultado para pseudo-inversa:
+	Ein:   0.07918658628900388
+	Eout:  0.1309538372005258
+#+END_SRC
+
+En la siguiente imagen podemos ver las rectas de regresión obtenidas por ambos métodos.
+[[./images/sgd_vs_pinv.png]]
+
+Como podemos ver, ambos algoritmos presentan resultados similares. Siendo los de
+la pseudoinversa ligeramente mejores. Si aumentamos drásticamente el número de
+iteraciones del SGD, por ejemplo a 50000 iteraciones, conseguimos obtener
+resultados mejores que los de la pseudoinversa, a cambio de un coste
+computacional muy elevado.
+
+Los resultados obtenidos en ese caso son:
+
+#+BEGIN_SRC sh
+	Ein:   0.07959196376771532
+	Eout:  0.12969919660881674
+#+END_SRC
+
+** Apartado 2
+
+Declaramos la función ~simula_unif~ tal y como se nos pide
+
+#+BEGIN_SRC python
+def simula_unif(n, d, size):
+    return np.random.uniform(-size, size, (n, d))
+#+END_SRC
+
+Generamos nuestra muestra de entrenamiento de 1000 puntos.
+
+#+BEGIN_SRC python
+x = simula_unif(1000, 2, 1)
+#+END_SRC
+
+Pintamos el mapa de los mismos.
+
+[[./images/puntos.png]]
+
+Definimos la función $f(x_1, x_2)=sign((x_1 - 0.2)^2 + x_2^2-0.6)$
+
+#+BEGIN_SRC python
+def f(x1, x2):
+  return np.sign((x1 - 0.2)**2 + x2**2 - 0.6)
+#+END_SRC
+
+Generamos el conjunto de etiquetas, asignando etiquetas aleatorias al último 10%
+(como los puntos se general aleatoriamente, es irrelevante a que subconjunto le
+asignemos las etiquetas aleatorias, elegimos el último 10% por comodidad).
+
+#+BEGIN_SRC python
+y = np.hstack(( f(x[:900, :].T),
+                np.random.choice([-1, 1], 100)
+              ))[:, None]
+#+END_SRC
+
+Homogeneizamos ~x~.
+
+#+BEGIN_SRC python
+x = np.hstack((np.ones((1000, 1)), x))
+#+END_SRC
+
+Pintamos entonces el mapa de puntos etiquetados
+
+[[./images/puntos_clasificados.png]]
+
+Utilizamos el algoritmo del Gradiente Descendente Estocástico para estimar el
+vector de pesos, seleccionamos un número de iteraciones del SGD de 500.
+Obtenemos los siguientes resultados sobre la nube de puntos:
+
+#+BEGIN_SRC sh
+Ein:  0.9257336690016589
+#+END_SRC
+
+En la siguiente imagen podemos ver la recta de regresión obtenida.
+
+[[./images/puntos_lineal.png]]
+
+Tras ejecutar 1000 iteraciones del experimento, utilizando conjuntos de ~train~ y ~test~, los valores medios de $E_{in}$ y
+$E_{out}$ son:
+
+#+BEGIN_SRC sh
+	Ein:  0.908544721188619
+	Eout: 0.9133718101045537
+#+END_SRC
+
+Como se puede observar tanto con los resultados numéricos como en el gráfico
+mostrado, intentar obtener una recta de regresión sobre este conjunto de datos
+es imposible.\\
+
+Repetimos ahora el experimento utilizando el siguiente vector de características
+$(1, x_1, x_2, x_1x_2, x_1^2, x_2^2)$. Para ello definimos la siguiente función
+que añade las nuevas características como columnas al vector $x$.
+
+#+BEGIN_SRC python
+def add_caracteristicas(x):
+  x1x2 =  np.multiply(x[:,1],x[:,2])[:, None]
+  x1x1 =  np.multiply(x[:,1],x[:,1])[:, None]
+  x2x2 =  np.multiply(x[:,2],x[:,2])[:, None]
+  x = np.hstack((x, x1x2, x1x1, x2x2))
+  return x
+#+END_SRC
+
+Hacemos una ejecución de prueba y obtenemos los siguientes resultados.
+
+#+BEGIN_SRC sh
+    Ein:  0.5857597829867359
+#+END_SRC
+
+También podemos usar nuestra función ~scatter~ para ver el modelo creado.
+
+[[./images/puntos_no_lineal.png]]
+
+Veamos que resultados obtenemos en las 1000 iteraciones
+
+#+BEGIN_SRC sh
+	Ein:  0.5707487282231383
+	Eout: 0.5759004775119132
+#+END_SRC
+
+
+Como podemos observar con los resultados obtenidos utilizando un modelo no
+lineal son mucho mejores, esto tiene sentido pues la función que estamos
+teniendo en cuenta asigna un -1 a los puntos que se encuentren dentro de un
+circunferencia de centro $(0.2, 0)$ y radio $0.6$, mientras que asigna un valor
+de 1 a aquellos puntos que se encuentren fuera de dicha circunferencia.\\
+
+Por ello, utilizar un modelo de regresión lineal para estos datos no es
+adecuado, mientras que, utilizar un modelo no lineal con las características
+cuadráticas permite que el modelo se asimile a la función que hemos utilizado, pudiendo aproximar dicha circunferencia y obtener
+mejores resultados. Aún así, el valor del error obtenido parece elevado, por
+ello, probamos a sacar de la función, el valor de los pesos que se consideran
+/perfectos/ (definen la circunferencia que hemos descrito).\\
+
+Estos serían $(0.64, -0.4, 0, 0, 1, 1)$, si calculamos el valor del error
+resultante obtenemos
+
+#+BEGIN_SRC sh
+    Ein:  0.5122392771003782
+#+END_SRC
+
+Y podemos ver el gráfico en la siguiente imagen.
+
+[[./images/perf.png]]
+
+Como se puede observar, la aproximación realizada mediante el algoritmo SGD está
+bastante cerca de la que se obtiene analíticamente. \\
+
+De todas formas, el valor del error con estos pesos sigue
+siendo bastante elevado, nos preguntamos
+entonces, cuanto de ese error se debe al ruido introducido. Calculamos entonces
+el valor de $E_{in}$ utilizando estos pesos y eliminando el ruido, al hacerlo
+obtenemos un valor de $E_{in} = 0.46401827045857796$.\\
+
+Como vemos, no dista mucho de los valores obtenidos anteriormente, con lo que
+podemos concluir que la solución obtenida por el algoritmo SGD en el caso no lineal es bastante buena.
+
+\newpage
+
+* Bonus 1
+
+Implementamos el método de Newton, para ello definimos una función que aceptará
+los siguientes parámetros.
++ ~p~: El punto inicial del algoritmo.
++ ~f~: La función a minimizar.
++ ~df~: El gradiente de ~f~.
++ ~hf~: La matriz Hessiana de ~f~.
++ ~r~: La tasa de aprendizaje.
++ ~max_iterations~: El número de iteraciones a realizar.
+#+BEGIN_SRC python
+def newton(p, f, df, hf, r, max_iterations):
+#+END_SRC
+
+El algoritmo devolverá dos variables:
+- ~w~: El punto obtenido.
+- ~ws~: Array con la sucesión de puntos que se ha obtenido en cada iteración.
+
+En cada iteración actualizamos ~w~ según indica el algoritmo.
+
+$$
+w = w - H^{-1}(w)\nabla f(w)
+$$
+
+Donde
+
+$$H= \begin{pmatrix}
+  \dfrac{\partial^2 f}{\partial x^2} & \dfrac{\partial^2 f}{\partial x \partial y} \\
+  \dfrac{\partial^2 f}{\partial y \partial x} & \dfrac{\partial^2 f}{\partial y^2}
+ \end{pmatrix}$$\\
+
+Utilizamos la función ~np.linalg.inv~ para calcular la inversa de la Hessiana en el punto.
+
+#+BEGIN_SRC python
+for _ in range(max_iterations):
+    w = w - r*np.linalg.inv(hf(w)).dot(df(w))
+    ws.append(w)
+#+END_SRC
+
+Veamos que resultados obtenemos con los puntos que se pedían en el ejercicio 1.
+Comenzamos viendo gráficas de la evolución sobre el punto inicial $(1, -1)$
+utilizando 50 iteraciones. Elegimos dos valores de $\tau$, en particular 0.01 y 0.1 como
+hicimos en el otro ejercicio. Los resultados numéricos aparecen más tarde en las tablas.
+
+
+#+caption: Evolución del método de Newton $\tau = 0.01$
+#+ATTR_LaTeX: :placement [H]
+[[./images/newton001.png]]
+
+#+caption: Evolución del método de Newton $\tau = 0.1$
+#+ATTR_LaTeX: :placement [H]
+[[./images/newton01.png]]
+
+Veamos ahora los resultados numéricos obtenidos en los puntos iniciales $(2.1, -2.1), (3, -3), (1.5, 1.5)$
+y $(1,-1)$.
+
+#+caption: Tabla de resultados del método de Newton $\tau = 0.1$
+|-------+-------+--------------------+--------------------+------------------------|
+| $x_1$ | $y_1$ |      $x_{50}$      |      $y_{50}$      |     Valor Obtenido     |
+|-------+-------+--------------------+--------------------+------------------------|
+|  <c>  |  <c>  |        <c>         |        <c>         |          <c>           |
+|  2.1  | -2.1  | 2.0003480109559346 | -2.000352045980580 | -9.304464461733982e-06 |
+|  3.0  | -3.0  | 3.0536725971809330 | -3.028291762643699 |   3.1079767229661335   |
+|  1.5  |  1.5  | 1.4253007501761388 | 1.3685543241721887 |   23.689627079862035   |
+|  1.0  | -1.0  | 0.9463274028190676 | -0.971708237356300 |   3.1079767229661335   |
+|-------+-------+--------------------+--------------------+------------------------|
+
+
+#+caption: Tabla de resultados del método de Newton $\tau = 0.01$
+|-------+-------+--------------------+--------------------+----------------------|
+| $x_1$ | $y_1$ |      $x_{50}$      |      $y_{50}$      |    Valor Obtenido    |
+|-------+-------+--------------------+--------------------+----------------------|
+|  <c>  |  <c>  |        <c>         |        <c>         |         <c>          |
+|  2.1  | -2.1  | 2.0477633555313860 | -2.048070437120294 | -0.1689707126492011  |
+|  3.0  | -3.0  | 3.0206501572058055 | -3.010623259242468 |  3.0671859515488280  |
+|  1.5  |  1.5  | 1.4270267930033473 | 1.5076223435327116 |  24.892748286747203  |
+|  1.0  | -1.0  | 0.9793498427941949 | -0.989376740757530 |  3.0671859515488302  |
+|-------+-------+--------------------+--------------------+----------------------|
+
+Analicemos los resultados obtenidos, como sabemos, el método de Newton busca ceros de funciones y nosotros lo estamos
+aplicando a $\nabla f$, por tanto, el método no nos asegura la
+obtención de un mínimo, si no que podríamos estar persiguiendo un máximo o un
+punto de silla. Este es el caso de la primera ejecución que hemos realizado,
+donde vemos que la solución no se aproxima a un mínimo.\\
+
+Si comparamos las tablas con la obtenida en el ejercicio 1, podemos ver que los
+resultados son peores en todos los casos, probablemente debido al problema que
+acabamos de comentar.\\
+
+Podemos suponer que bajo situaciones favorables, la convergencia de este método es mas rápida
+que la que proporciona el gradiente descendente, sin embargo, a la vista de los resultados, el
+método de Newton parece inferior al gradiente descendente (en nuestro experimento) debido
+a que los resultados que obtiene son peores a pesar de un mayor coste
+computacional (calcular la Hessiana de la función) y que se puede aplicar a un
+conjunto menor de funciones (deben tener derivada segunda). \\

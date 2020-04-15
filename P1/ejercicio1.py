@@ -35,7 +35,7 @@ Argumentos:
 def display_figure(f, points):
 
   fig = plt.figure(figsize=plt.figaspect(2.))
-  fig.suptitle('Evolución de los puntos en iteracoines y sobre superficie')
+  fig.suptitle('Evolución de los puntos en iteraciones y sobre superficie')
 
   # First subplot
   ax = fig.add_subplot(2, 2, 1)
@@ -190,6 +190,7 @@ print('\tPunto obtenido: {}'.format(minima))
 print('\tValor de la función en el punto: {}'.format(E(minima)))
 input()
 
+print("\tMostrando graficas de los resultados.\n")
 display_figure(f, points)
 
 
@@ -204,6 +205,7 @@ print('\tPunto obtenido: {}'.format(minima))
 print('\tValor de la función en el punto: {}'.format(E(minima)))
 input()
 
+print("\tMostrando graficas de los resultados.\n")
 display_figure(f, points)
 
 """
