@@ -21,8 +21,8 @@ def f(x, y, a, b):
     return 1 if y - a * x - b >= 0 else -1
 
 
-def simula_recta():
-    points = np.random.uniform(-50, 50, size=(2, 2))
+def simula_recta(intervalo=[-50, 50]):
+    points = np.random.uniform(intervalo[0], intervalo[1], size=(2, 2))
     x1 = points[0, 0]
     x2 = points[1, 0]
     y1 = points[0, 1]
@@ -114,7 +114,7 @@ def ajusta_PLA(datos, labels, max_iter, vini):
         if np.all(w == w_old):  # No hay cambios
             return w, ws, len(ws)
 
-    return w, ws, len(ws)
+    return w, ws, len(ws) - 1
 
 
 N = 100
@@ -185,3 +185,71 @@ PLA_experiment(x_hom, y)
 # Ahora con los datos del ejercicio 1.2.b
 print("Apartado 2.1.b (con ruido)")
 PLA_experiment(x_hom, y_noise)
+
+
+############################################################
+##################### Apartado b ###########################
+############################################################
+
+
+intervalo = [-2, 2]
+a, b = simula_recta(intervalo)
+
+N = 100
+datos = simula_unif(N, 2, intervalo)
+datos_hom = np.hstack((np.ones((N, 1)), datos))
+
+labels = np.empty((N,))
+for i in range(N):
+    labels[i] = f(datos[i, 0], datos[i, 1], a, b)
+
+
+def logistic_error(x, y, w):
+    return np.mean(np.log(1 + np.exp(-y * x.dot(w))))
+
+
+def d_logistic_error(x, y, w):
+    return -y * x / (1 + np.exp(y * w.dot(x)))
+
+
+def rl_sdg(data, labels, eta=0.01, w=None):
+
+    if w is None:
+        w = np.zeros(data.shape[1])
+    indexes = np.arange(data.shape[0])
+
+    ws = []
+    while True:
+        w_old = w.copy()
+        indexes = np.random.permutation(indexes)
+
+        for index in indexes:
+            w += -eta * d_logistic_error(data[index], labels[index], w)
+
+        ws.append(w.copy())
+        if np.linalg.norm(w - w_old) <= 0.01:
+            break
+
+    return w, ws
+
+
+w, ws = rl_sdg(datos_hom, labels)
+print("Apartado 2.2 (en ventana aparte)")
+scatter(
+    datos, labels, lambda x: w[0] + x[:, 0] * w[1] + x[:, 1] * w[2],
+)
+
+n_test = 1000
+test = simula_unif(n_test, 2, intervalo)
+test_hom = np.hstack((np.ones((n_test, 1)), test))
+
+labels_test = np.empty((n_test,))
+for i in range(n_test):
+    labels_test[i] = f(test[i, 0], test[i, 1], a, b)
+
+print(
+    "\t% correctos en test RL: {}%".format(
+        get_results(test_hom, labels_test, lambda x: x.dot(w))
+    )
+)
+print("\tError: {}".format(logistic_error(test_hom, labels_test, w)))
