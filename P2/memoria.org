@@ -1,0 +1,103 @@
+#+options: toc:nil
+#+BIND: org-latex-image-default-width 0.5\linewidth
+#+TITLE: Aprendizaje Automático
+#+SUBTITLE: Práctica 2
+#+AUTHOR: Luis Antonio Ortega Andrés
+#+LANGUAGE: es
+#+LATEX_HEADER:\setlength{\parindent}{0in}
+#+LATEX_HEADER: \usepackage[margin=0.8in]{geometry}
+#+LATEX_HEADER: \usepackage[spanish]{babel}
+#+LATEX_HEADER: \usepackage{mathtools}
+#+latex_class_options: [11pt]
+#+LaTeX_HEADER: \usepackage[left=1in,top=1in,right=1in,bottom=1.5in]{geometry}
+#+LaTeX_HEADER: \usepackage{palatino}
+#+LaTeX_HEADER: \usepackage{fancyhdr}
+#+LaTeX_HEADER: \usepackage{sectsty}
+#+LaTeX_HEADER: \usepackage{engord}
+#+LaTeX_HEADER: \usepackage{cite}
+#+LaTeX_HEADER: \usepackage{graphicx}
+#+LaTeX_HEADER: \usepackage{setspace}
+#+LaTeX_HEADER: \usepackage[compact]{titlesec}
+#+LaTeX_HEADER: \usepackage[center]{caption}
+#+LaTeX_HEADER: \usepackage{placeins}
+#+LaTeX_HEADER: \usepackage{color}
+#+LaTeX_HEADER: \usepackage{amsmath}
+#+LaTeX_HEADER: \usepackage{minted}
+#+LaTeX_HEADER: \usepackage{pdfpages}
+#+latex_header: \titlespacing*{\subsection}{0pt}{5.5ex plus 1ex minus .2ex}{4.3ex plus .2ex}
+
+* Ejercicio 1
+** Funciones Auxiliares
+
+En este apartado se utilizan las siguientes funciones auxiliares.
+- ~simula_unif~: Devuelve un conjunto de puntos creados mediante una distribución uniforme.
+- ~simula_gaus~: Devuelve un conjunto de puntos creados mediante distribuciones normales.
+- ~simula_recta~: Genera una recta aleatoria utilizando dos puntos aleatorios (uniforme).
+- ~scatter~: Dado un conjunto de puntos, etiquetas y una función, pinta una gráfica donde se pueden diferenciar las diferentes clases que existen en el conjunto, además de la función y las regiones que genera. Acepta los siguientes parámetros.
+  - ~x~: Conjunto de puntos.
+  - ~y~: Conjunto de etiquetas (opcional).
+  - ~f~: Función a pintar y marcar regiones (opcional).
+  - ~label~: Etiqueta de la función en caso de ser utilizada.
+
+
+** Apartado 1
+En este apartado se nos pide generar dos nubes de puntos utilizando las funciones ~simula_unif~ y ~simula_gaus~ que se nos proporcionan.
+
+#+Caption: ~simula_unif(50, 2, [-50,50])~ y ~simula_gaus(50, 2, [5,7])~
+#+ATTR_LaTeX: :placement [H]
+[[./images/nubes.jpg]]
+
+** Apartado 2
+
+Generamos una muestra de puntos 2D
+
+#+BEGIN_SRC python
+x = simula_unif(100, 2, [-50, 50])
+#+END_SRC
+
+Creamos un vector de etiquetas utilizando la función $f(x,y) = y - ax - b$
+
+#+BEGIN_SRC python
+a, b = simula_recta()
+y = np.empty((100))
+for i in range(N):
+    y[i] = 1 if x[i, 1] - a * x[i, 0] - b >= 0 else -1
+#+END_SRC
+
+Mostramos los puntos generados.
+
+#+Caption: Puntos generados etiquetados con respecto a la recta.
+#+ATTR_LaTeX: :placement [H]
+[[./images/puntos_etiquetas_y_recta.png]]
+
+Modificamos el un 10% de las etiquetas y volvemos a mostrar los resultados. Para ello utilizamos
++ ~np.nonzero~: Para calcular el conjunto de etiquetas con valor $label$.
++ ~np.random.choice~: Escoger una muestra aleatoria.
++ ~math.ceil~: Para redondear el valor correspondiente al 10%.
+
+#+BEGIN_SRC python
+for label in {-1, 1}:
+    labels = np.nonzero(y == label)[0]
+    rand_labels = np.random.choice(labels,
+                                   math.ceil(0.1 * len(labels)),
+                                   replace=False)
+    y[rand_labels] = -y[rand_labels]
+#+END_SRC
+
+#+Caption: Puntos etiquetados modificados.
+#+ATTR_LaTeX: :placement [H]
+[[./images/puntos_modificados_y_recta.png]]
+
+Utilizamos ahora las siguientes funciones para comparar su utilidad como clasificadores de los puntos generados.
+
+#+Caption: $f(x,y) = (x-10)^2 + (y-20)^2 - 400$, $f(x,y) = 0.5(x + 10)^2 + (y - 20)^2 -400$, $f(x,y) = 0.5(x - 10)^2 - (y + 20)^2 - 400$, $f(x,y) = y - 20x^2-5x+3$
+#+ATTR_LaTeX: :placement [H]
+[[./images/clasificadores.jpg]]
+
+*** TODO Comparar.
++ Comparar regiones
++ Con peores pese a ser mas complejas.
++ Como influye la modificacion de etiquetas en el proceso de aprendizaje.
+
+* Ejercicio 2
+* Bonus 1

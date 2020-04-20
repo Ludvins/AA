@@ -141,7 +141,7 @@ def PLAPocket(datos, labels, max_iter, vini):
             if label * w.dot(dato) <= 0:
                 w += label * dato
 
-         result = get_results(datos, labels, lambda x: x.dot(w))
+        result = get_results(datos, labels, lambda x: x.dot(w))
         if result > result_best:
             w_best = w.copy()
             result_best = result
@@ -172,26 +172,20 @@ names = ["Regresión lineal", "PLA-Pocket (RL)", "PLA-Pocket (random)"]
 print("Apartado 3.b.1")
 
 scatter(
-    x_train, y_train, w = ws, labels = nombres,
+    x_train, y_train, w=ws, labels=names,
 )
 
 scatter(
-    x_test, y_test, w = ws, labels = nombres,
+    x_test, y_test, w=ws, labels=names,
 )
 
 
-for w, nombre in zip(ws, nombres):
+for w, n in zip(ws, names):
     print(
-        "Ein   para ",
-        nombre,
-        ": ",
-        100 - get_results(x_train, y_train, lambda x: x.dot(w)),
+        "Ein   para ", n, ": ", 100 - get_results(x_train, y_train, lambda x: x.dot(w)),
     )
     print(
-        "Etest para ",
-        nombre,
-        ": ",
-        100 - get_results(x_test, y_test, lambda x: x.dot(w)),
+        "Etest para ", n, ": ", 100 - get_results(x_test, y_test, lambda x: x.dot(w)),
     )
 
 
