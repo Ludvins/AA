@@ -16,17 +16,22 @@ np.random.seed(1)
 ####################### FUNCIONES AUXILIARES  ##########################
 ########################################################################
 
-
+# Declaramos la función uilizada en el ejercicio anterior.
 def f(x, y, a, b):
     return 1 if y - a * x - b >= 0 else -1
 
 
-def simula_recta(intervalo=[-50, 50]):
+def simula_recta( intervalo= [-50, 50]):
+    """
+    Genera dos puntos aleatorios y devuelve los coeficientes de la recta que los une
+    """
     points = np.random.uniform(intervalo[0], intervalo[1], size=(2, 2))
     x1 = points[0, 0]
     x2 = points[1, 0]
     y1 = points[0, 1]
     y2 = points[1, 1]
+    if x2 == x1:
+        print("Se han generado dos puntos alineados verticalmente -> No se puede construir una recta como funcion que los una. (División por 0)")
     # y = a*x + b
     a = (y2 - y1) / (x2 - x1)  # Calculo de la pendiente.
     b = y1 - a * x1  # Calculo del termino independiente.
@@ -35,7 +40,12 @@ def simula_recta(intervalo=[-50, 50]):
 
 
 def simula_unif(N, dim, rango):
+    """
+    Devuelve un conjunto de N puntos de R^dim, dentro del rango indicado
+    utilizando una districubión uniforme.
+    """
     return np.random.uniform(rango[0], rango[1], (N, dim))
+
 
 
 def scatter(x, y=None, f=None, label="Function"):
@@ -100,33 +110,33 @@ def ajusta_PLA(datos, labels, max_iter, vini):
     - it: el número de iteraciones."""
 
     w = vini.copy()
-    ws = [w]
 
-    for it in range(max_iter):
+    for i in range(1, max_iter+1):
         w_old = w.copy()
 
         for dato, label in zip(datos, labels):
             if w.dot(dato) * label <= 0:
                 w += label * dato
 
-        ws.append(w)
+        if (w == w_old).all():  # No hay cambios
+            return w, i 
 
-        if np.all(w == w_old):  # No hay cambios
-            return w, ws, len(ws)
+    return w, i
 
-    return w, ws, len(ws) - 1
-
-
+# Numero de puntos a utilziar
 N = 100
 a, b = simula_recta()
 
+# Generamos el conjunto de puntos
 x = simula_unif(N, 2, [-N / 2, N / 2])
 
-y = np.empty((N))
-for i in range(N):
-    y[i] = f(x[i, 0], x[i, 1], a, b)
+# Creamos el conjunto de etiquetas
+y = np.array([f (x[i, 0], x[i, 1], a, b) for i in range(N)])
 
+# Generamos el conjunto de datos homogeneizados
 x_hom = np.hstack((np.ones((N, 1)), x))
+
+# Guardamos el conjunto de etiquetas con ruido en un array distinto
 y_noise = y.copy()
 
 # Modifica un 10% aleatorio de cada etiqueta
@@ -151,20 +161,32 @@ def get_results(data, labels, classifier):
 
 
 def PLA_experiment(x, y, max_iters=1000):
-    """Prueba el algoritmo de Perceptron para un conjunto de x dado."""
+    """
+    Ejecuta el algoritmo PLA sobre el conjunto de datos dado
+     - Utilizando un vector inicial nulo.
+     - Utilizando un vector inicial aleatorio x10. Devuelve la media
+       y la desviación típica de los resultados.
 
+    Muestra en cada caso:
+     - El porcentaje de acierto.
+     - El número de iteraciones.
+    """
+    
     print("\tVector inicial de zeros.")
-    w, _, its = ajusta_PLA(x, y, max_iters, np.zeros(3))
+    w, its = ajusta_PLA(x, y, max_iters, np.zeros(3))
+    
     print("\t\tIteraciones: {} épocas".format(its))
     print("\t\t% correctos: {}%".format(get_results(x, y, lambda x: x.dot(w))))
+    print("\t\tGráfica")
     scatter(x[:, [1, 2]], y, lambda x: w[0] + x[:, 0] * w[1] + x[:, 1] * w[2])
+
     print("\tVector inicial aleatorio (media de 10 ejecuciones)")
+    n_tests = 10
+    iterations = np.empty((n_tests,))
+    percentages = np.empty((n_tests,))
 
-    iterations = np.empty((10,))
-    percentages = np.empty((10,))
-
-    for i in range(10):
-        w, _, iterations[i] = ajusta_PLA(x, y, max_iters, np.random.rand(3))
+    for i in range(n_tests):
+        w, iterations[i] = ajusta_PLA(x, y, max_iters, np.random.rand(3))
         percentages[i] = get_results(x, y, lambda x: x.dot(w))
 
     print(
@@ -179,11 +201,11 @@ def PLA_experiment(x, y, max_iters=1000):
     )
 
 
-print("Apartado 2.1.a (sin ruido)")
+print("Apartado a.1 (sin ruido)")
 PLA_experiment(x_hom, y)
 
 # Ahora con los datos del ejercicio 1.2.b
-print("Apartado 2.1.b (con ruido)")
+print("Apartado a.2 (con ruido)")
 PLA_experiment(x_hom, y_noise)
 
 
@@ -192,60 +214,83 @@ PLA_experiment(x_hom, y_noise)
 ############################################################
 
 
-intervalo = [-2, 2]
-a, b = simula_recta(intervalo)
-
-N = 100
-datos = simula_unif(N, 2, intervalo)
-datos_hom = np.hstack((np.ones((N, 1)), datos))
-
-labels = np.empty((N,))
-for i in range(N):
-    labels[i] = f(datos[i, 0], datos[i, 1], a, b)
-
-
 def logistic_error(x, y, w):
+    """
+    Definicion del error logístico vectorial
+    """
     return np.mean(np.log(1 + np.exp(-y * x.dot(w))))
 
 
 def d_logistic_error(x, y, w):
+    """
+    Definicion de la derivada del error logístico (no vectorial)
+    """
     return -y * x / (1 + np.exp(y * w.dot(x)))
 
 
-def rl_sdg(data, labels, eta=0.01, w=None):
+def rl_sgd(data, labels, eta=0.01, w=None):
+    """
+    Implementación de Regresión logística con Gradiente
+    Descendente Estocástico utilizando un tamaño del batch
+    de 1.
+    Argumentos:
+    - data: Conjunto de datos con coordenadas homogéneas
+    - labels: Conjunto de etiquetas de los datos
+    Opcionales:
+    - eta: Tasa de aprendizaje
+    - w: Vector inicial de pesos. Vector nulo por defecto.
 
+    Devuelve: el vector de pesos w.
+    """
+
+    # Inicializamos el vector de pesos
     if w is None:
         w = np.zeros(data.shape[1])
+    # Inicializamos el vector de indices que vamos a utilizar.
     indexes = np.arange(data.shape[0])
 
-    ws = []
     while True:
         w_old = w.copy()
+        # Generamos una permutación de los índices
         indexes = np.random.permutation(indexes)
-
+        # Para cada uno de ellos actualizamos el vector de pesos
         for index in indexes:
             w += -eta * d_logistic_error(data[index], labels[index], w)
 
-        ws.append(w.copy())
+        # Criterio de parada, distancia menor a 0.01
         if np.linalg.norm(w - w_old) <= 0.01:
             break
 
-    return w, ws
+    return w
 
 
-w, ws = rl_sdg(datos_hom, labels)
-print("Apartado 2.2 (en ventana aparte)")
+# Genera conjunto de datos 
+a, b = simula_recta([0,2])
+N = 100
+datos = simula_unif(N, 2, [0, 2])
+datos_hom = np.hstack((np.ones((N, 1)), datos))
+labels = np.array([f (datos[i, 0], datos[i, 1], a, b) for i in range(N)])
+
+# Ejecutamos el algoritmo sobre el conjunto de datos
+w = rl_sgd(datos_hom, labels)
+
+# Mostramos una gráfica
+print("Apartado b.2")
+print("\tGrafico de conjunto de entrenamiento.")
 scatter(
     datos, labels, lambda x: w[0] + x[:, 0] * w[1] + x[:, 1] * w[2],
 )
 
-n_test = 1000
-test = simula_unif(n_test, 2, intervalo)
-test_hom = np.hstack((np.ones((n_test, 1)), test))
+# Generamos un conjunto de test de tamaño 1000.
+N = 1000
+test = simula_unif(N, 2, [0, 2])
+test_hom = np.hstack((np.ones((N, 1)), test))
+labels_test = np.array([f (test[i, 0], test[i, 1], a, b) for i in range(N)])
 
-labels_test = np.empty((n_test,))
-for i in range(n_test):
-    labels_test[i] = f(test[i, 0], test[i, 1], a, b)
+print("\tGrafico de conjunto de test.")
+scatter(
+    test, labels_test, lambda x: w[0] + x[:, 0] * w[1] + x[:, 1] * w[2],
+)
 
 print(
     "\t% correctos en test RL: {}%".format(

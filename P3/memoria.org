@@ -1,0 +1,90 @@
+#+options: \n:t
+#+BIND: org-latex-image-default-width 0.5\linewidth
+#+TITLE: Práctica 3
+#+SUBTITLE: Aprendizaje Automático
+#+AUTHOR: Luis Antonio Ortega Andrés
+#+LANGUAGE: es
+#+latex_header: \hypersetup{colorlinks=true, linkcolor=black}
+#+LATEX_HEADER:\setlength{\parindent}{0in}
+#+LATEX_HEADER: \usepackage[margin=1.2in]{geometry}
+#+LATEX_HEADER: \usepackage[spanish]{babel}
+#+LATEX_HEADER: \usepackage{mathtools}
+#+latex_class_options: [11pt]
+#+LaTeX_HEADER: \usepackage[left=1in,top=1in,right=1in,bottom=1.5in]{geometry}
+#+LaTeX_HEADER: \usepackage{fancyhdr}
+#+LaTeX_HEADER: \usepackage{sectsty}
+#+LaTeX_HEADER: \usepackage{engord}
+#+LaTeX_HEADER: \usepackage{cite}
+#+LaTeX_HEADER: \usepackage{graphicx}
+#+LaTeX_HEADER: \usepackage{setspace}
+#+LaTeX_HEADER: \usepackage[compact]{titlesec}
+#+LaTeX_HEADER: \usepackage[center]{caption}
+#+LaTeX_HEADER: \usepackage{placeins}
+#+LaTeX_HEADER: \usepackage{color}
+#+LaTeX_HEADER: \usepackage{amsmath}
+#+LaTeX_HEADER: \usepackage{minted}
+#+LaTeX_HEADER: \usepackage{pdfpages}
+#+latex_header: \titlespacing*{\subsection}{0pt}{5.5ex}{3.3ex}
+#+latex_header: \titlespacing*{\section}{0pt}{5.5ex}{1ex}
+
+* Optical Recognition of Handwritten Digits Data Set
+** Compresión del problema
+
+La base de datos consiste en un conjunto de ~bitmaps~ normalizados de números escritos a mano por 43 personas distintas (30 de ellas para el conjunto de ~training~ y 13 para el conjunto de ~test~).
+
+Los ~bitmap~ tienen dimensión \(32\times 32\) divididos en bloques de \(4\times 4\) donde contamos el número de bits que hay en él. Esto nos genera una matriz de $8 \times 8$ con valores enteros entre 0 y 16.
+
+#+Caption: Ejemplo decodificación de dígitos
+[[./images/ejemplo_codificacion.png]]
+
+Los datos vienen entonces codificados como un vector de $64$ valores entre $0$ y $16$, junto con un último valor correspondiente a la clase del mismo (valor numérico entre $0$ y $9$).
+
+Disponemos de un conjunto de entrenamiento con $3823$ muestras y un conjunto de test de $1797$ muestras, luego estamos ante un problema de aprendizaje *supervisado* donde buscamos entrenar un modelo de *clasificación* de nuestros datos.
+
+La distribución de clases de los datos sigue la siguiente tabla
+
+| *Clase* | *Entrenamiento* | *Test* |
+|---------+-----------------+--------|
+|       0 |             376 |    178 |
+|       1 |             389 |    182 |
+|       2 |             380 |    177 |
+|       3 |             389 |    183 |
+|       4 |             387 |    181 |
+|       5 |             376 |    182 |
+|       6 |             377 |    181 |
+|       7 |             387 |    179 |
+|       8 |             380 |    174 |
+|       9 |             382 |    180 |
+
+
+Utilizamos t-SNE (t-distributed Stochastic Neighbor Embedding) para representar nuestros datos con dos variables. El funcionamiento es el siguiente:
++ Construye una distribución de probabilidad $P$ sobre parejas de elementos de la muestra, de forma que si los elementos son muy similares, la pareja tiene una alta probabilidad de ser elegida y una probabilidad muy baja en caso de ser distintos.
++ Define una distribución $Q$ de la misma forma en el espacio de menor dimensión.
++ Minimiza la divergencia de Kullback-Leibler entre ambas distribuciones utilizando un método de gradiente descendente. La divergencia de Kullback-Leibler se define como
+  $$
+    KL(P\mid Q) = \mathbb{E}_P \big[ \log P\big] -  \mathbb{E}_P \big[ \log Q\big]
+  $$
+
+#+Caption: Visualización de los datos en $\mathbb{R}^2$. Con etiquetado de los clusters.
+[[./images/TSNE_digits.png]]
+
+
+
+** Preprocesado de datos
+
+Como preprocesado de datos utilizamos la siguiente configuración
+
+ + ~VarianceThreshold~.
+ + ~StandardScaler~.
+ + ~PCA~.
+
+Para mostrar los cambios hechos en los datos mostramos la matriz de correlación entre las variables antes y después de preprocesarlos.
+
+[[./images/correlacion_digits.png]]
+
+
+** Resultados óptimos obtenidos
+Error Logistic en training: 0.010
+Error Logistic en test: 0.048
+
+[[./images/Confusion_logistic_digits.png]]
